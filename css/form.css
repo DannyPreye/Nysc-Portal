@@ -1,0 +1,112 @@
+
+.register{
+  animation: register 5s ;
+  animation-direction: alternate;
+}
+@keyframes register {
+  0%{
+    opacity: 0.8;
+    transform: scale(0.3);
+  }
+  25%{
+    transform: scale(1);
+    opacity: 1;
+  }
+
+}
+.anim{
+  position: relative;
+  transform: scale(0.7) ;
+  opacity: 0;
+  bottom: -10px;
+}
+.reform{
+  transition: all 500ms ease-in;
+  position: relative;
+  transform: scale(1);
+  opacity: 1;
+  bottom: 0;
+}
+.welcome1{
+  position:relative;
+  left:-100%;
+}
+.welcome2{
+  position:relative;
+  right:-100%;
+}
+.final{
+  position: relative;
+  left: 0;
+  right: 0;
+  transition: all 500ms ease;
+}
+.rotate{
+  animation-name: rot;
+  animation-duration: 3s;
+  animation-iteration-count: infinite;
+  animation-direction:normal;
+  transition: all 500ms linear;
+}
+@keyframes rot {
+  from{
+    transform: rotate(45deg);
+  }
+  to{
+    transform: rotate(360deg);
+  
+  }
+}
+.left{
+  position: relative;
+  animation: left 2s  forwards;
+  transform: translateX(-100%);
+  opacity: 0;
+}
+@keyframes left {
+   to{
+     transform: translateX(0);
+     opacity: 1;
+   }
+}
+.right{
+  position: relative;
+  animation: right 2s forwards;
+ 
+  transform: translateX(100%);
+  opacity: 0;
+}
+@keyframes right {
+   to{
+     transform: translateX(0);
+     opacity: 1;
+   }
+}
+.login{
+  opacity: 0;
+  animation: login 2s 2s forwards;
+  transition: all 200ms linear;
+}
+@keyframes login {
+  to{
+    opacity: 1;
+  }
+}
+#menu{
+  transition: all 1s linear;
+  transform: translateY(100%);
+  opacity: 0;
+  animation: menu 1s forwards;
+}
+.menu{
+  transition: all 1s linear;
+  transform: translateY(100%);
+  opacity: 0;
+  animation: menu 1s forwards;
+}
+@keyframes menu {
+ to{
+  transform:translateY(0);
+  opacity: 1;
+ }
+}
