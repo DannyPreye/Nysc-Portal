@@ -1,6 +1,6 @@
 <?php
   require_once __DIR__. '\classes\class.php';
-  $server = '127.0.0.7';
+  $server ="127.0.0.1";
   $username = "Daniel";
   $password = "12345678";
   $db = "daniel";

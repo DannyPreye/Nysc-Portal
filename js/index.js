@@ -11,7 +11,7 @@ const preloader = document.getElementById("preloader");
 const full_content = document.getElementById("full-content");
 const menu = document.getElementById("menu");
 
-
+console.log(preloader);
 
     setTimeout(()=>{
         preloader.classList.add("hidden")

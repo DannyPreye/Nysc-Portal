@@ -13,18 +13,23 @@
                 $this->password = $password;
                 $this->db = $db;
         }
+
+
        function connect(){
-           $con = new mysqli($this->server,$this->username, $this->password, $this->db);
-           if($con->connect_error){
-               die("ERROR: ".$con->connect_error);
-           }else{
+        //   Db connection with PDO 
+           $mb = "mysql:host=$this->server;dbname=$this->db";
+
+          try{
+            $con =  new PDO($mb,$this->username,$this->password);
+            $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             return $con;
-           }
+          }
+          catch (PDOException $e){
+            echo "connection error:" .$e->getMessage();
+          }
           
        }
-        //    Create Table 
-       function createTable($table){
-       }
+    
         //    Store the profile pics in the database
        function profile_pics(){
 
@@ -34,7 +39,7 @@
            $final_des =$pics_folder.$file_name; //Final file Destination
            $tmp_loc = $profile_pix['tmp_name'];
            $img_format = strtolower(pathinfo($final_des,PATHINFO_EXTENSION));
-           $require_file_format = array('jpg','jpeg','png','gif');
+           $require_file_format = array('jpg','jpeg','png');
            
         //    check if the file is an image 
             if(in_array($img_format,$require_file_format)){
@@ -42,77 +47,125 @@
                     return $final_des;
                 } 
              }
+             return false;
         }
+
+
           //Get login details
         function get_username_password($table,$email,$pass){
-            $sql ="SELECT * FROM $table WHERE email='$email' && password='$pass'";
-           $result = $this->connect()->query($sql);
-           
-                while($user = $result->fetch_assoc()){
-                                
-                    return $user;
-                }
-           
-            
+
+           try{
+               $sql = "SELECT * FROM $table Where $email=':email' and password = ':pass' LIMIT 1 ";
+               $stmt = $this->connect()->prepare($sql);
+               $stmt->bindParam(':email', $email);
+               $stmt->bindParam(':pass', $pass);
+               $stmt->execute();
+
+             return  $stmt->setFetchMode(PDO::FETCH_ASSOC);
+           }
+           catch(PDOException $e){
+               echo "Error:". $e->getMessage();
+           }               
         }
+
+
         // Update Password
         function update_password($table, $email,$pass,$new_pass){
-            $sql= "UPDATE $table 
-                    SET password ='$new_pass'
-                    WHERE password = '$pass' and email = '$email'";
-            if($result = $this->connect()->query($sql)){
-                return "it was successfull";
+           try{
+                $sql= "UPDATE $table 
+                SET password =':new_pass'
+                WHERE password = ':pass' and email = ':email'";
+
+                $stmt = $this->connect()->prepare($sql);    
+
+                $stmt->bindParam(':new_pass', $new_pass);
+                $stmt->bindParam(':pass', $pass);
+                $stmt->bindParam(':email', $email);
+
+                $stmt->execute();
+
+                return $stmt->setFetchMode(PDO::FETCH_ASSOC);
+            }
+            catch(PDOException $error){
+                echo 'Error'.$error->getMessage();
+            }  
+        }
+
+
+        // Get all user information
+        function check_user_email($table,$email){
+            try{
+                $sql = "SELECT * FROM $table WHERE email=':email' ";
+                $stmt = $this->connect()->prepare($sql);
+
+                $stmt->bindParam(':email', $email);
+
+                $stmt->execute();
+
+                return $stmt->setFetchMode(PDO::FETCH_ASSOC);
+            }
+            catch(PDOException $err){
+                echo 'get users error: '.$err->getMessage();
+            }   
+        }
+
+        // Login 
+        function login($table, $email,$pass){
+            try{
+                $sql = "SELECT * FROM $table WHERE email =':email' &&
+                password = ':pass'";
+
+                $stmt = $this->connect()->prepare($sql);
+
+                $stmt->bindParam(':pass', $pass);
+                $stmt->bindParam(':email', $email);
+
+                $stmt->execute();
+                return $stmt->setFetchMode(PDO::FETCH_ASSOC);
+            }
+            catch(PDOException $err){
+                echo "login Error ".$err->getMessage();
             }
         }
-        // Get all user information
-        function get_all_user_data($table,$email){
-            $sql = "SELECT * FROM $table WHERE email='$email' ";
-            $result = $this->connect()->query($sql);
-            while($user = $result->fetch_assoc()){
-                               
-                return $user;
-        }
-            
-        }
-        function login($table, $email,$password){
-            $sql = "SELECT * FROM $table WHERE email ='$email' &&
-                password = '$password'
-            ";
-            $result = $this->connect()->query($sql);
-                while($user = $result->fetch_assoc()){
-                               
-                    return $user;
-                }
 
-        }
+
         // Insert data to database
         function insert_into_table($table,$fname,$lname,$dob,$email,$gender,$phone,$state_code,
             $pics,$password){
 
-            $sql = "INSERT INTO $table(fname,lname,dob,email,sex,phone,state_code,profile_pics, 
-                password) VALUES('$fname','$lname','$dob','$email','$gender','$phone','$state_code','$pics','$password')";
-         
-            if( $result = $this->connect()->query($sql)){
-                return $result;
-            }else {
-                echo 'ERROR';
-            }
-           
-        }
-        // sanitize Data
-        function sanitize_data($data){
-            $data = trim($data);
-            $data = stripslashes($data);
-            $data = htmlspecialchars($data);
+            try{
+                
+                $sql = "INSERT INTO $table(fname,lname,dob,email,sex,phone,state_code,profile_pics, 
+                password) VALUES(':fname',':lname',':dob',
+                                ':email',':gender',':phone',':state_code',':pics',':password'
+                                )";
+            
+                $stmt = $this->connect()->prepare($sql);
 
-            return $data;
+                $stmt->bindParam(':fname',$fname);
+                $stmt->bindParam(':lname',$lname);
+                $stmt->bindParam(':dob',$dob);
+                $stmt->bindParam(':email',$email);
+                $stmt->bindParam(':gender',$gender);
+                $stmt->bindParam(':state_code',$state_code);
+                $stmt->bindParam(':pics',$pics);
+                $stmt->bindParam(':password',$password);
+                
+                $stmt->execute();
+
+                return $result = "Registration Successful";
+            }
+            catch(PDOException $err){
+                echo "Registration Error: ".$err->getMessage();
+            }
         }
+
+        
         // close the database
        function close_db(){
 
-            $this->connect()->close();
+            $con = $this->connect();
+          return  $con = null;
        }
-
-
     }
 ?>

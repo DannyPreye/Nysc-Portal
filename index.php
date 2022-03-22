@@ -1,7 +1,7 @@
 <?php 
     session_start();
 
-    require_once __DIR__. '\php_form_script\registration.php';;
+    require_once  './php_form_script/registration.php';;
     
     $er=isset($_SESSION["invalid"])?$_SESSION["invalid"]: null;
 
@@ -1022,7 +1022,7 @@
 <?php unset($_SESSION["invalid"]);
     unset($error);
 ?>
-    <script type="module" src="./js/index.js"></script>
+    <script src="js/index.js"></script>
 
 </body>
 

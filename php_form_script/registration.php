@@ -1,58 +1,106 @@
 <?php
   
   require_once __DIR__. '\dbConnection.php';
-    // Get user input and check the db, if there's a user with 
-    // data. if true return a message, else login to dashboard.
-    $fname = $lname = $phone = $dob = $gender = $pics =$pass = $conf_pass =$final_pass = $email ="";
-    
-    if($_SERVER['REQUEST_METHOD']=='POST'){
-            $fname = sanitize_input($_POST['fname']);
-            $lname = sanitize_input($_POST['lname']);
-            $phone = sanitize_input($_POST['phone']);
-            $dob = sanitize_input($_POST['dob']);
-            $gender = sanitize_input($_POST['gender']);
-            $confirm_pass =  md5(sanitize_input($_POST['password_confirm']));
-            $pass = md5(sanitize_input($_POST['password']));
-            $email = filter_var($_POST['email'],FILTER_SANITIZE_EMAIL);
-            $pics = $con->profile_pics();
-            $state_code = rand(10,1000);
-    }
+  require_once "./php_form_script/functions/validateForm.func.php";
+    if(isset($_POST["submit"])){
 
-    //create error variable to store error information
-    $error = array();
-    // check to see if the user has registered before
-    $user = $con->get_all_user_data($table,$email);
+        $error = array();
+        // get store the user input into a variable for validation 
 
-       if(!empty($_POST['submit'])){
-           
-        if(!empty($user)){
-                
-                $error['email'] = "Email Already Exist";
-            }else{
-                if($pass == $confirm_pass){
+        $fname = "";
+        $lname = "";
+        $dob = "";
+        $phone = "";
+        $email = "";
+        $gender = "";
+        $password = "";
+        $pass_final="";
+        $state_code = rand(1000,4000);
+        $profile_pics = ($con->profile_pics() !=false)?$con->profile_pics(): false;
+        $pics="";
 
-                    $insert_data = $con->insert_into_table($table,$fname,$lname,$dob,$email,$gender,
-                    $phone,$state_code,$pics,$pass
-                    );
-                    $user_data = $con->get_all_user_data($table,$email);
-                    $_SESSION['user'] = $user_data;
-                    
-                }else{
-                    $error['password']="Confirm password";
-                }
-               
-            }
-       }
-       
+        //check if user input is empty
+        if(checkEmpty($_POST['fname'])==true || checkEmpty($_POST['lname'])==true ||
+            checkEmpty($_POST['email'])==true || checkEmpty($_POST['dob'])==true ||
+            checkEmpty($_POST['phone'])==true || checkEmpty($_POST['email'])==true ||
+            checkEmpty($_POST['email'])==true || checkEmpty($_POST['gender'])==true ||
+            checkEmpty($_POST['password'])==true || checkEmpty($_POST['password_confirm'])==true){
+            
+                $error['input'] = "Fill all input";       
+        }
 
-    //  Sanitize input
-    function sanitize_input($param){
-        $param = trim($param);
-        $param = stripslashes($param);
-        $param = htmlspecialchars($param);
+        //errorMessage for pics
+        if($profile_pics==false){
+            $error['pics'] = "please ensure you are uploading the right file format(jpeg,jpg,png)";
+        }
+        else{
+            $pics= $profile_pics;
+        }
+
+        // Validate fname input
+        if(validateName($_POST['fname']) ==true){
+            $error['fname'] = "Enter a valid fname";
+        }
+        else{
+            $fname = $_POST['fname'];
+        }
         
-        return $param;
+        //validate lname input
+        if(validateName($_POST['lname']) ==true){
+            $error['lname'] = "Enter a valid lname";
+        }
+        else{
+            $lname = $_POST['lname'];
+        }
+
+        // Valide phone number 
+        if(validateNum($_POST['phone']) ==true){
+            $error['phone'] = "phone number should not be less than 12 digit";
+        }
+        else{
+            $phone = $_POST['phone'];
+        }
+
+
+        // validate email
+        if(validateEmail($_POST['email']) ==true){
+            $error['email'] = "Enter a valid email address";
+        }
+        else{
+            $email = $_POST['email'];
+        }
+        
+        // validate password 
+        if(validatePswd($_POST['password']) ==true){
+            $error['password'] = "Password must contain digit, alphabet, character and a whitespace";
+        }
+        else{
+            $password = $_POST['password'];
+        }
+
+        if(checkPwsd_again($_POST['password'],$_POST['password_confirm'])==true){
+            $error['confirm_pss'] = "Password does'nt match";
+        }
+        else{
+            $pass_final = $_POST['password'];
+        }
+
+        //check if email has already been registered
+         $result = $con->check_user_email($table,$email);
+         if(!empty($result)){
+             $error['email']+="<br> User has already been registered";
+         }
+         else{
+             //insert user data into the database
+             $pass_final = md5($pass_final);
+             $con->insert_into_table($table,$fname,$lname,$dob,$email,$gender,$phone,$state_code,$pics,$pass_final);
+         }
+
     }
+    else{
+       
+    }
+   
 
     $con->close_db();
     
